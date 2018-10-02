@@ -290,3 +290,127 @@ website登录后，创建分类:
 ```bash
 至此，博客后台管理初步完成！但注意,此时我们使用的是db.sqlite3数据库进行存储数据。
 ```
+
+
+### 5.使用Mysql数据库
+1.安装依赖库
+```bash
+(venv) liupengdeMacBook-Pro:website liupeng$ pip list |grep mysqlclient
+mysqlclient 1.3.13 
+```
+
+2.配置Django默认setting中的数据库
+```bash
+编辑"website/website/settings.py":
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'website',
+        'USER': 'website',
+        'PASSWORD': 'websitepass',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
+}
+```
+
+3.建立数据文件和应用到数据库
+```bash
+//创建SQL数据文件
+(venv) liupengdeMacBook-Pro:website liupeng$ python manage.py makemigrations
+No changes detected
+
+//根据SQL数据文件，应用到数据库
+(venv) liupengdeMacBook-Pro:website liupeng$ python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, blog, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying blog.0001_initial... OK
+  Applying sessions.0001_initial... OK
+
+
+注意：如果出现如下错误是由于mysql 8.0的安全机制造成的
+django.db.utils.OperationalError: (2059, "Authentication plugin 'caching_sha2_password' cannot be loaded: dlopen(/usr/local/Cellar/mysql-connector-c/6.1.11/lib/plugin/caching_sha2_password.so, 2): image not found")
+
+解决方法：
+liupengdeMacBook-Pro:~ liupeng$ mysql -uroot
+mysql> alter user 'website'@'localhost' identified with mysql_native_password by 'websitepass';
+mysql> flush privileges;
+```
+
+4.查看数据库中创建的表
+```bash
+(venv) liupengdeMacBook-Pro:website liupeng$ mysql -uwebsite -pwebsitepass -hlocalhost -P3306  website -e "show tables;"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----------------------------+
+| Tables_in_website          |
++----------------------------+
+| auth_group                 |
+| auth_group_permissions     |
+| auth_permission            |
+| auth_user                  |
+| auth_user_groups           |
+| auth_user_user_permissions |
+| blog_category              |
+| blog_entry                 |
+| blog_entry_category        |
+| blog_entry_tags            |
+| blog_tag                   |
+| django_admin_log           |
+| django_content_type        |
+| django_migrations          |
+| django_session             |
++----------------------------+
+```
+
+5.创建后台管理员账号
+```bash
+(venv) liupengdeMacBook-Pro:website liupeng$ python manage.py createsuperuser
+Username (leave blank to use 'liupeng'): admin
+Email address: smallasa@sina.com
+Password: 输入：123qwe``
+Password (again): 输入：123qwe``
+Superuser created successfully.
+```
+
+6.启动website
+```bash
+(venv) liupengdeMacBook-Pro:website liupeng$ python manage.py runserver
+```
+
+7.在浏览器中访问  
+```bash
+在浏览器中输入URL：http://127.0.0.1:8000/admin
+输入账号：admin
+输入密码：123qwe``
+
+具体操作如下图：
+```
+website登录前首页：
+![website登录首页](static/images/03/admin_login_1.png)
+
+website登录后首页： 
+![website登录首页](static/images/03/admin_login_2.png)
+
+website登录后，创建标签:
+![website登录后首页](static/images/03/admin_login_3.png)
+
+website登录后，创建分类:
+![博客标签](static/images/03/admin_login_4.png)
+
+```bash
+至此，博客后台管理初步完成！但注意,此时我们使用的是Mysql数据库进行存储数据。
+```
