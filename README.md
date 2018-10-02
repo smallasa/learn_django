@@ -414,3 +414,114 @@ website登录后，创建分类:
 ```bash
 至此，博客后台管理初步完成！但注意,此时我们使用的是Mysql数据库进行存储数据。
 ```
+
+
+### 6.URL及视图设计
+1.修改主路由配置文件
+```bash
+编辑"website/websitte/urls.py":
+
+from django.conf.urls import url
+from django.contrib import admin
+# 导入include模块
+from django.conf.urls import include
+
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    # 创建二级路由(转向APP自己路由地址)
+    url(r'^blog/', include('blog.urls')),
+]
+```
+
+2.在APP内部创建路由文件
+```bash
+创建并编辑"website/blog/urls.py":
+
+# 导入url模块
+from django.conf.urls import url
+# 导入view试图模块
+from . import views
+
+
+#定义APP名字
+app_name = 'blog'
+
+
+urlpatterns = {
+    url(r'^$', views.index, name='blog_index'),
+    url(r'^(?P<blog_id>[0-9]+)', views.detail, name='blog_detail'),
+}
+
+
+注意: 一定要注意路由的设定，很容易出现404，有可能是路由设置有问题，未匹配
+```
+
+3.在APP内部修改视图
+```bash
+编辑"website/blog/views.py":
+
+from django.shortcuts import render
+
+# Create your views here.
+def index(request):
+    return render(request, 'blog/index.html', locals())
+
+# 由于路由中有传参，所以定义视图时，需要把参数也写上
+def detail(request, blog_id):
+    return render(request, 'blog/detail.html', locals())
+
+
+注意: 由视图去转向HTML
+```
+
+4.在APP项目下创建HTML文件
+```bash
+//创建存放html的目录
+(venv) liupengdeMacBook-Pro:website liupeng$ mkdir -p blog/templates/blog
+
+//创建website/blog/templates/blog/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+</head>
+<body>
+    <h1>博客首页</h1>
+</body>
+</html>
+
+//创建website/blog/templates/blog/detail.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>博客页面</title>
+</head>
+<body>
+    <h1>博客{{ blog_id }}页面</h1>
+</body>
+</html>
+```
+
+5.启动服务
+```bash
+(venv) liupengdeMacBook-Pro:website liupeng$ python manage.py runserver
+```
+
+6.在浏览器中访问  
+blog首页:  http://127.0.0.1:8000/blog  
+![blog首页](static/images/04/blog_1.png)
+
+blog二级目录: http://127.0.0.1:8000/blog/2
+![blog二级目录](static/images/04/blog_2.png)
+
+7.URL和视图的顺序规则
+```text
+由上可知，URL设计及视图设计的顺序步骤如下:
+首先，修改"website/website/urls.py"文件，定义二级路由。
+其次，修改"website/blog/urls.py"文件，定义应用自己的路由规则，路由规则指向视图。
+然后，修改"website/blog/views.py"文件，定义应用自己的视图，并指向静态HTML页面。
+最后，创建HTML目录并编写HTML静态页面。
+```

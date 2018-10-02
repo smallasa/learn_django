@@ -15,7 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+# 导入include模块
+from django.conf.urls import include
+
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    # 创建二级路由(转向APP自己路由地址)
+    url(r'^blog/', include('blog.urls')),
 ]
