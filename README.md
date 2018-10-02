@@ -525,3 +525,447 @@ blog二级目录: http://127.0.0.1:8000/blog/2
 然后，修改"website/blog/views.py"文件，定义应用自己的视图，并指向静态HTML页面。
 最后，创建HTML目录并编写HTML静态页面。
 ```
+
+
+### 7.前端页面设计
+1.基于Bootstrap框架，创建html基础模板
+```bash
+打开"https://v3.bootcss.com/getting-started/"，
+将基本模板里面的HTML代码拷贝一下，
+然后创建并编辑"website/blog/templates/blog/base.html"
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <!--设定title block-->
+    <title>{% block title %}基本模版{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim 和 Respond.js 是为了让 IE8 支持 HTML5 元素和媒体查询（media queries）功能 -->
+    <!-- 警告：通过 file:// 协议（就是直接将 html 页面拖拽到浏览器中）访问页面时 Respond.js 不起作用 -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <!--设定content block-->
+    {% block content %}
+
+    {% endblock %}
+
+
+    <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+    <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"></script>
+
+    <!--设定script block-->
+    {% block script %}
+
+    {% endblock %}
+  </body>
+</html>
+
+注意：
+1.设置标签为"{% block name %} xxxx {% endblock %}"的好处是可以被子模板继承，进行替换。
+2.上面css和js文件是直接访问CDN进行生成的
+```
+
+2.编辑"website/blog/templates/blog/index.html"，继承base.html模版
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客首页{% endblock %}
+
+{% block content %}
+    博客首页
+{% endblock %}
+```
+
+3.启动服务，在浏览器中输入http://127.0.0.1:8000/blog
+![blog_extends_base](static/images/05/blog_extends_base.png)
+
+4.将bootstrap和jquery下载到本地,进行开发
+```bash
+1.打开"https://v3.bootcss.com/"，下载bootstrap-3.3.7-dist.zip
+2.打开"https://jquery.com/download/",下载jquery-3.3.1.min.js
+3.创建"website/static"目录
+4.将bootstrap-3.3.7-dist.zip解压到"website/static"目录
+5.将jquery-3.3.1.min.js拷贝到"website/static"目录
+
+6.编辑"website/website/setting.py",将static目录引入
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+7.重新编辑"website/blog/templates/blog/base.html"
+<!--先加载static files-->
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <!--设定title block-->
+    <title>{% block title %}基本模版{% endblock %}</title>
+
+    <!-- 引用本地 Bootstrap -->
+    <link href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- HTML5 shim 和 Respond.js 是为了让 IE8 支持 HTML5 元素和媒体查询（media queries）功能 -->
+    <!-- 警告：通过 file:// 协议（就是直接将 html 页面拖拽到浏览器中）访问页面时 Respond.js 不起作用 -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <!--设定content block-->
+    {% block content %}
+
+    {% endblock %}
+
+
+    <!-- 重新加载本地jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+    <script src="{% static 'jquery-3.3.1.min.js' %}"></script>
+    <!-- 重新加载本地 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+    <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
+
+    <!--设定script block-->
+    {% block script %}
+
+    {% endblock %}
+  </body>
+</html>
+
+8.重启服务，并访问http://127.0.0.1:8000/blog,结果与步骤3一样.
+```
+
+5.设置导航页
+```bash
+1.打开"https://v3.bootcss.com/components/#navbar",将导航条代码进行复制
+2.编辑"website/blog/templates/blog/base.html"，将代码复制到<body></body>中，进行修改。
+<!--先加载static files-->
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <!--设定title block-->
+    <title>{% block title %}基本模版{% endblock %}</title>
+
+    <!-- 引用本地 Bootstrap -->
+    <link href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- HTML5 shim 和 Respond.js 是为了让 IE8 支持 HTML5 元素和媒体查询（media queries）功能 -->
+    <!-- 警告：通过 file:// 协议（就是直接将 html 页面拖拽到浏览器中）访问页面时 Respond.js 不起作用 -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<!--导航条设置-->
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#my-nav" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">我的博客网站</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="my-nav">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">博客</a></li>
+                <li ><a href="#">关于博主</a></li>
+                <li ><a href="#">联系我们</a></li>
+            </ul>
+            <form class="navbar-form navbar-left">
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Search">
+                </div>
+                <button type="submit" class="btn btn-default">搜索</button>
+            </form>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#">登录</a></li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+
+
+<!--设定content block-->
+{% block content %}
+
+{% endblock %}
+
+
+<!-- 重新加载本地jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+<script src="{% static 'jquery-3.3.1.min.js' %}"></script>
+<!-- 重新加载本地 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+<script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
+
+<!--设定script block-->
+{% block script %}
+
+{% endblock %}
+</body>
+</html>
+
+3.启动服务，刷新查看其导航条
+```
+![导航条样式](static/images/05/blog_nav_1.png)
+
+6.如何模仿别人的网站
+```bash
+1.打开"http://www.youzhan.org/",挑选自己感兴趣的网站。
+2.打开"https://jupyter.org/"(我挑选的网站),登录到首页后，右击查看源代码。
+注意：要模仿别人的前端页面，只需要查看css和js文件即可。
+3.打开它的nav样式表:
+"https://jupyter.org/css/logo-nav.css?1533935181478631422"。
+4.拷贝它的body样式。
+5.创建目录"website/blog/static/blog/css/"目录。
+6.创建文件"website/blog/static/blog/css/blog-nav.css",并将body样式粘贴到里面。
+7.修改文件"website/blog/templates/blog/base.html",导入样式文件blog-nav.css。如图:
+    <!-- 引用本地 Bootstrap -->
+    <link href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- 引用blog/css/blog_nav.css -->
+    <link href="{% static 'blog/css/blog_nav.css' %}" rel="stylesheet">
+8.修改文件"website/blog/templates/blog/base.html",编辑nav样式
+    <nav class="navbar navbar-default">
+    改为:
+    <nav class="navbar navbar-fixed-top">
+9.编辑"website/blog/static/blog/css/blog_nav.css"
+.navbar {
+    color: black;
+    border-width: thin;
+    -webkit-transition: .2s;
+    background-color: white;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: white;
+}
+.navbar-fixed-top .navbar-brand {
+    /*padding: 5px 0px;*/
+    margin-left: 15px;
+}
+/*.navbar-logo {
+    height: 35px;
+}*/
+.nav > li > a {
+    font-size: 20px;
+    padding: 12px 12px 10px;
+}
+9.修改完后，重启服务，浏览
+```
+![blog_nav_2](static/images/05/blog_nav_2.png)
+
+7.首页导入图片
+```bash
+1.在"www.easyicon.net"上找一张图片，并下载
+2.创建"website/blog/blog/images"目录
+3.将下载的图片复制粘贴到"website/blog/blog/images/blog_test.ico"
+4.修改文件"website/blog/templates/blog/base.html"，插入图片
+    <a class="navbar-brand" href="#">我的博客网站</a>
+    改为：
+    <a class="navbar-brand" href="#">
+        <img src="{% static 'blog/images/blog_test.ico' %}" />
+        <span class="navbar-text">我的博客</span>
+    </a>
+5.编辑"website/blog/static/blog/css/blog-nav.css"，调整图标位置
+nav a img {
+    width: 50px;
+    height: 50px;
+    display: inline-block;
+    float: left;
+}
+
+nav .navbar-brand {
+    padding-top: 10px;
+}
+
+nav a span {
+    font-size: 24px;
+}
+
+nav .navbar-form {
+    padding-top: 10px;
+}
+
+6.修改完后，刷新浏览器
+```
+![blog_nav_3](static/images/05/blog_nav_3.png)
+
+8.对首页插入页脚
+```bash
+1.编辑"website/blog/templates/blog/base.html"，在<body></body>中插入页脚代码。
+<footer>
+    <div class="footer" role="navigation">
+        <div class="container">
+            <div class="navbar-text">
+                <ul class="footer-text">
+                    <li><a href="#">主页</a></li>
+                    <li><a href="#">联系我们</a></li>
+                    <li><a href="#">关于博主</a></li>
+                    <li><a href="#">文档支持</a></li>
+                    <li><a href="#">博客首页</a></li>
+                </ul>
+                <p>Copyright © 2018 刘朋的博客</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+2.刷新浏览器，进行查看
+```
+![blog_nav_4](static/images/05/blog_nav_4.png)
+
+9.编辑"website/blog/templates/blog/base.html"
+```bash
+1.在nav导航条中设置：
+  <li class="active"><a href="/blog/">博客</a></li>
+
+2.在footer页脚中设置：
+  <li><a href="/blog/">博客首页</a></li>
+
+3.刷新浏览器，点击导航条的博客，以及页脚下面的博客首页，都会自动跳转到首页          
+```
+
+10.首页继承base.html模板，调出基本框架
+```bash
+1.编辑"website/blog/templates/blog/index.html"
+{% extends 'blog/base.html' %}
+{% block title %}博客首页{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            adfalfals
+        </div>
+    </div>
+{% endblock %}
+
+2.刷新浏览器进行查看
+```
+![blog_nav_5](static/images/05/blog_nav_5.png)
+
+11.基础模板(base.html)的完整代码
+```bash
+<!--先加载static files-->
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <!--设定title block-->
+    <title>{% block title %}基本模版{% endblock %}</title>
+
+    <!-- 引用本地 Bootstrap -->
+    <link href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- 引用blog/css/blog_nav.css -->
+    <link href="{% static 'blog/css/blog_nav.css' %}" rel="stylesheet">
+
+    <!-- HTML5 shim 和 Respond.js 是为了让 IE8 支持 HTML5 元素和媒体查询（media queries）功能 -->
+    <!-- 警告：通过 file:// 协议（就是直接将 html 页面拖拽到浏览器中）访问页面时 Respond.js 不起作用 -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<!--导航条设置-->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#my-nav" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">
+                <img src="{% static 'blog/images/blog_test.ico' %}"/>
+                <span class="navbar-text">我的博客</span>
+            </a>
+
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="my-nav">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="/blog/">博客</a></li>
+                <li><a href="#">关于博主</a></li>
+                <li><a href="#">联系我们</a></li>
+            </ul>
+            <form class="navbar-form navbar-left">
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Search">
+                </div>
+                <button type="submit" class="btn btn-default">搜索</button>
+            </form>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#">登录</a></li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+
+
+<!--设定content block-->
+{% block content %}
+
+{% endblock %}
+
+
+<footer>
+    <div class="footer" role="navigation">
+        <div class="container">
+            <div class="navbar-text">
+                <ul class="footer-text">
+                    <li><a href="#">主页</a></li>
+                    <li><a href="#">联系我们</a></li>
+                    <li><a href="#">关于博主</a></li>
+                    <li><a href="#">文档支持</a></li>
+                    <li><a href="/blog/">博客首页</a></li>
+                </ul>
+                <p>Copyright © 2018 刘朋的博客</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- 重新加载本地jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+<script src="{% static 'jquery-3.3.1.min.js' %}"></script>
+<!-- 重新加载本地 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+<script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
+
+<!--设定script block-->
+{% block script %}
+
+{% endblock %}
+</body>
+</html>
+```
