@@ -115,3 +115,16 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 注意：mysql 8.0 使用如下方法授权是错误的
 grant all privileges on website.* to 'website'@'localhost' identified by 'websitepass' with grant option;
 ```
+
+### 3.搭建项目环境
+1.修改settings.py文件
+```text
+LANGUAGE_CODE = 'zh-hans'
+TIME_ZONE = 'Asia/Shanghai'
+USE_I18N = True
+USE_L10N = True
+USE_TZ = False
+```
+
+2.初次启动Django,浏览器中输入:http://127.0.0.1:8000/  
+![Django hello](static/images/01/Django_hello.png)
