@@ -1333,3 +1333,52 @@ def detail(request, blog_id):
 21.刷新浏览器，点击三次"3"博文后，进行观察浏览量
 ![blog_zhanshi_7](static/images/06/blog_zhanshi_7.png)
 
+
+### 9.博客详细页面
+1.编辑"website/blog/templates/blog/detail.html"
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客详细页面{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                <!--展示标题-->
+                <h1>{{ entry.title }}</h1>
+                <!--展示博文信息-->
+                <p>
+                    <strong>{{ entry.author }}</strong>
+
+                    &nbsp;&nbsp;&nbsp;&nbsp;{{ entry.created_time | date:'Y年m月d日'}}
+
+                    &nbsp;&nbsp;&nbsp;&nbsp;分类：
+                    {% for category in entry.category.all %}
+                        &nbsp;&nbsp;<a href="">{{ category.name }}</a>
+                    {% endfor %}
+
+                    &nbsp;&nbsp;&nbsp;&nbsp;标签：
+                    {% for tag in entry.tags.all %}
+                        &nbsp;&nbsp;<a href="">{{ tag.name }}</a>
+                    {% endfor %}
+
+                    &nbsp;&nbsp;&nbsp;&nbsp;浏览量：
+                        &nbsp;&nbsp;{{ entry.visiting }}
+                </p>
+
+                <!--展示配图-->
+                {% if entry.img %}
+                    <div><img src="{{ entry.img.url }}" alt="博客配图" width="75%" /></div>
+                {% endif %}
+
+                <hr />
+
+                <p>{{ entry.body }}</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+```
+
+2.刷新浏览器，进行展示
+![blog_xiangxiye](static/images/07/blog_xiangxiye.png)
