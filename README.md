@@ -1535,3 +1535,228 @@ def detail(request, blog_id):
 ```
 ![blog_markdown_3](static/images/08/blog_markdown_3.png)
 
+
+### 11.博客分页
+1.编辑"website/blog/views.py"
+```bash
+from django.shortcuts import render
+
+# 要展示所有博客，就需要先导入models
+from . import models
+
+#导入markdown
+import markdown
+#导入语法高亮度
+import pygments
+
+#Django内置分页功能
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+# Create your views here.
+
+
+# 展示当前页码的方法
+def make_paginator(objects, page, num=5):
+    paginator = Paginator(objects, num)
+
+    try:
+        object_list = paginator.page(page)
+    except PageNotAnInteger:
+        object_list = paginator.page(1)
+    except EmptyPage:
+        object_list = paginator.page(paginator.num_pages)
+
+    return object_list, paginator
+
+# 自定义分页方法
+def pagination_data(paginator, page):
+    # 如果无法分页，则无需展示分页导航条
+    if paginator.num_pages == 1:
+        return {}
+
+    # 当前页的左边，初始值为空
+    left = []
+
+    # 当前页的右边，初始值为空
+    right = []
+
+    # 标示第1页页码后是否需要显示省略号
+    left_has_more = False
+
+    # 标示最后一页页码前是否需要显示省略号
+    right_has_more = False
+
+    # 表示是否需要显示第1页第页码号
+    first = False
+
+    # 表示是否需要显示最后一页的页码号
+    last = False
+
+    # 获得当前请求的页码号
+    try:
+        page_number = int(page)
+    except ValueError:
+        page_number = 1
+    except:
+        page_number = 1
+
+    # 获得分页后的总页数
+    total_pages = paginator.num_pages
+
+    # 获得整个分页页码列表
+    page_range = paginator.page_range
+
+    if page_number == 1:
+        right = page_range[page_number:page_number + 4]
+
+        if right[-1] < total_pages - 1:
+            right_has_more = True
+
+        if right[-1] < total_pages:
+            last = True
+    elif page_number == total_pages:
+        left = page_range[(page_number - 3) if (page_number - 3) > 0 else 0:page_number - 1]
+
+        if left[0] > 2:
+            left_has_more = True
+
+        if left[0] > 1:
+            first = True
+    else:
+        left = page_range[(page_number - 3) if (page_number - 3) > 0 else 0:page_number - 1]
+        right = page_range[page_number:page_number + 2]
+
+        if right[-1] < total_pages - 1:
+            right_has_more = True
+        if right[-1] < total_pages:
+            last = True
+
+        if left[0] > 2:
+            left_has_more = True
+        if left[0] > 1:
+            first = True
+
+    data = {
+        'left': left,
+        'right': right,
+        'left_has_more': left_has_more,
+        'right_has_more': right_has_more,
+        'first': first,
+        'last': last,
+    }
+
+    return data
+
+
+def index(request):
+    # 获取所有博客
+    entries = models.Entry.objects.all()
+
+    # 获取分页页码对象
+    page = request.GET.get('page', 1)
+    entry_list, paginator = make_paginator(entries, page)
+    page_data = pagination_data(paginator, page)
+
+    return render(request, 'blog/index.html', locals())
+
+
+# 由于路由中有传参，所以定义视图时，需要把参数也写上
+def detail(request, blog_id):
+    # 获取浏览量的方法
+    entry = models.Entry.objects.get(id=blog_id)
+    # 定义markdown
+    md = markdown.Markdown(extensions=[
+        'markdown.extensions.extra',
+        'markdown.extensions.codehilite',
+        'markdown.extensions.toc',
+    ])
+    # 将body内容转换为html
+    entry.body = md.convert(entry.body)
+    entry.toc = md.toc
+    entry.increase_visitting()
+    return render(request, 'blog/detail.html', locals())
+```
+
+2.编辑"website/blog/templates/blog/index.html"
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客首页{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                {% for entry in entry_list %}
+                    <br />
+                    <h2><a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></h2>
+                    <!--展示配图-->
+                    {% if entry.img %}
+                        <div><img src="{{ entry.img.url }}" alt="博客配图" width="75%" /></div>
+                    {% endif %}
+                    <!--判断摘要是否存在，存在展示；不存在展示body，截取其中的128位进行显示-->
+                    {% if entry.abstract %}
+                        <p>{{ entry.abstract }}</p>
+                    {% else %}
+                        <p>{{ entry.body | truncatechars:128 }}</p>
+                    {% endif %}
+                    <!--展示作者信息，博文发表时间，浏览量-->
+                    <p>
+                        <span>作者：{{ entry.author }}</span>
+                        <span>&nbsp;&nbsp;&nbsp;&nbsp;发表时间：{{ entry.created_time }}</span>
+                        <span>&nbsp;&nbsp;&nbsp;&nbsp;浏览量：{{ entry.visiting }}</span>
+                    </p>
+                {% endfor %}
+
+                <hr />
+
+                <div id="paginator" class="pull-right">
+                    <ul class="pagination">
+                        {% if entry_list.has_previous %}
+                            <li><a href="?page={{ entry_list.previous_page_number }}"><i class="glyphicon glyphicon-chevron-left"></i>前一页</a></li>
+                        {% endif %}
+
+                        {% if first %}
+                            <li><a href="?page=1">1</a></li>
+                        {% endif %}
+
+                        {% if left %}
+                            {% if left_has_more %}
+                                <span>...</span>
+                            {% endif %}
+
+                            {% for i in left %}
+                                <li><a href="?page={{ i }}">{{ i }}</a></li>
+                            {% endfor %}
+                        {% endif %}
+
+                        <li class="active"><a href="?page={{ entry_list.number }}">{{ entry_list.number }}</a></li>
+
+                        {% if right %}
+                            {% for i in right %}
+                                <li><a href="?page={{ i }}">{{ i }}</a></li>
+                            {% endfor %}
+
+                            {% if right_has_more %}
+                                <span>...</span>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if last %}
+                            <li><a href="?page={{ entry_list.num_pages }}">{{ entry_list.num_pages }}</a></li>
+                        {% endif %}
+
+                        {% if entry_list.has_next %}
+                            <li><a href="?page={{ entry_list.next_page_number }}">下一页<i class="glyphicon glyphicon-chevron-right"></i></a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+```
+
+3.刷新浏览器，查看内容
+![blog_fenye_1](static/images/09/blog_fenye_1.png)
+![blog_fenye_2](static/images/09/blog_fenye_2.png)
+![blog_fenye_3](static/images/09/blog_fenye_3.png)
