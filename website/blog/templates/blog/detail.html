@@ -1,5 +1,9 @@
 {% extends 'blog/base.html' %}
 {% block title %}博客详细页面{% endblock %}
+{% load static %}
+{% block css %}
+    <link href="{% static 'blog/css/github-markdown.css' %}" rel="stylesheet" />
+{% endblock %}
 
 {% block content %}
     <div class="container">
@@ -34,7 +38,11 @@
 
                 <hr />
 
-                <p>{{ entry.body }}</p>
+                <!--安全展示markdown内容-->
+                <p>
+                    {{ entry.toc | safe }}
+                    {{ entry.body | safe }}
+                </p>
             </div>
         </div>
     </div>

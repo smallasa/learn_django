@@ -1382,3 +1382,156 @@ def detail(request, blog_id):
 
 2.刷新浏览器，进行展示
 ![blog_xiangxiye](static/images/07/blog_xiangxiye.png)
+
+
+### 10.MarkDown排版、语法高亮度及博文目录
+1.安装markdown依赖库
+```bash
+(venv) liupengdeMacBook-Pro:website liupeng$ pip install markdown
+```
+
+2.编辑"website/blog/views.py",将mardown转换为html
+```bash
+from django.shortcuts import render
+
+# 要展示所有博客，就需要先导入models
+from . import models
+
+#导入markdown
+import markdown
+
+# Create your views here.
+
+
+def index(request):
+    # 获取所有博客
+    entries = models.Entry.objects.all()
+
+    return render(request, 'blog/index.html', locals())
+
+
+# 由于路由中有传参，所以定义视图时，需要把参数也写上
+def detail(request, blog_id):
+    # 获取浏览量的方法
+    entry = models.Entry.objects.get(id=blog_id)
+    # 定义markdown
+    md = markdown.Markdown(extensions=[
+        'markdown.extensions.extra',
+        'markdown.extensions.codehilite',
+    ])
+    # 将body内容转换为html
+    entry.body = md.convert(entry.body)
+    # entry.toc = md.toc
+    entry.increase_visitting()
+    return render(request, 'blog/detail.html', locals())
+```
+
+3.刷新浏览器进行展示
+![blog_markdown_1](static/images/08/blog_markdown_1.png)
+```bash
+注意：markdown有自我保护机制，展示出html只是静态页面，其中的html标签并不会被自动转换
+```
+
+4.编辑"website/blog/templates/blog/detail.html",将markdown转换的html进行展示
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客详细页面{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                <!--展示标题-->
+                <h1>{{ entry.title }}</h1>
+                <!--展示博文信息-->
+                <p>
+                    <strong>{{ entry.author }}</strong>
+
+                    &nbsp;&nbsp;&nbsp;&nbsp;{{ entry.created_time | date:'Y年m月d日'}}
+
+                    &nbsp;&nbsp;&nbsp;&nbsp;分类：
+                    {% for category in entry.category.all %}
+                        &nbsp;&nbsp;<a href="">{{ category.name }}</a>
+                    {% endfor %}
+
+                    &nbsp;&nbsp;&nbsp;&nbsp;标签：
+                    {% for tag in entry.tags.all %}
+                        &nbsp;&nbsp;<a href="">{{ tag.name }}</a>
+                    {% endfor %}
+
+                    &nbsp;&nbsp;&nbsp;&nbsp;浏览量：
+                        &nbsp;&nbsp;{{ entry.visiting }}
+                </p>
+
+                <!--展示配图-->
+                {% if entry.img %}
+                    <div><img src="{{ entry.img.url }}" alt="博客配图" width="75%" /></div>
+                {% endif %}
+
+                <hr />
+
+                <!--安全展示markdown内容-->
+                <p>{{ entry.body | safe }}</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+```
+
+5.刷新浏览器，进行展示
+![blog_markdown_2](static/images/08/blog_markdown_2.png)
+
+6.mardown实现代码高亮
+```bash
+1.安装pygments模块
+(venv) liupengdeMacBook-Pro:website liupeng$ pip install pygments
+2.打开"https://github.com/sindresorhus/github-markdown-css",下载github-markdown-css
+3.将css文件放到"website/blog/static/blog/css/"目录下
+
+4.编辑"website/blog/views.py",导入语法高亮模块
+#导入markdown
+import markdown
+#导入语法高亮度
+import pygments
+
+5.编辑"website/blog/templates/blog/detail.html",引用markdown的高亮css样式
+{% extends 'blog/base.html' %}
+{% block title %}博客详细页面{% endblock %}
+{% load static %}
+{% block css %}
+    <link href="{% static 'blog/css/github-markdown.css' %}" rel="stylesheet" />
+{% endblock %}
+```
+
+7.添加markdown目录列表
+```bash
+1.编辑"website/blog/views.py"
+# 由于路由中有传参，所以定义视图时，需要把参数也写上
+def detail(request, blog_id):
+    # 获取浏览量的方法
+    entry = models.Entry.objects.get(id=blog_id)
+    # 定义markdown
+    md = markdown.Markdown(extensions=[
+        'markdown.extensions.extra',
+        'markdown.extensions.codehilite',
+        'markdown.extensions.toc',  #导入
+    ])
+    # 将body内容转换为html
+    entry.body = md.convert(entry.body)
+    entry.toc = md.toc #重新转换
+    entry.increase_visitting()
+    return render(request, 'blog/detail.html', locals())
+
+2.编辑"website/blog/templates/blog/detail.html"，引用markdown目录
+  <!--安全展示markdown内容-->
+  <p>
+      {{ entry.toc | safe }}
+      {{ entry.body | safe }}
+  </p>
+  
+3.打开"http://127.0.0.1:8000/admin/blog/entry/"，重新编辑博客内容
+
+4.刷新浏览器，重新展示博文
+```
+![blog_markdown_3](static/images/08/blog_markdown_3.png)
+
