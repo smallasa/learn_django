@@ -8,7 +8,7 @@ from . import views
 app_name = 'blog'
 
 
-urlpatterns = {
+urlpatterns = [
     url(r'^$', views.index, name='blog_index'),
     url(r'^(?P<blog_id>[0-9]+)', views.detail, name='blog_detail'),
-}
+]

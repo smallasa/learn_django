@@ -4,7 +4,28 @@
 {% block content %}
     <div class="container">
         <div class="row">
-            adfalfals
+            <div class="col-md-9">
+                {% for entry in entries %}
+                    <br />
+                    <h2><a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></h2>
+                    <!--展示配图-->
+                    {% if entry.img %}
+                        <div><img src="{{ entry.img.url }}" alt="博客配图" width="75%" /></div>
+                    {% endif %}
+                    <!--判断摘要是否存在，存在展示；不存在展示body，截取其中的128位进行显示-->
+                    {% if entry.abstract %}
+                        <p>{{ entry.abstract }}</p>
+                    {% else %}
+                        <p>{{ entry.body | truncatechars:128 }}</p>
+                    {% endif %}
+                    <!--展示作者信息，博文发表时间，浏览量-->
+                    <p>
+                        <span>作者：{{ entry.author }}</span>
+                        <span>&nbsp;&nbsp;&nbsp;&nbsp;发表时间：{{ entry.created_time }}</span>
+                        <span>&nbsp;&nbsp;&nbsp;&nbsp;浏览量：{{ entry.visiting }}</span>
+                    </p>
+                {% endfor %}
+            </div>
         </div>
     </div>
 {% endblock %}

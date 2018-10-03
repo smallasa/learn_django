@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 # Create your models here.
 
 
@@ -42,6 +43,18 @@ class Entry(models.Model):
 
     def __str__(self):
         return self.title
+
+    # 添加自动生成路由路径的方法
+    def get_absolute_url(self):
+        # blog:blog_detail ,blog是APP名字；blog_detail是urls中定义的路由名字
+        # 将self.id传参给blog_id,然后使用blog应用中的blog_detail路由规则
+        # 生成的url地址类如：http://127.0.0.1:8000/blog/3
+        return reverse('blog:blog_detail', kwargs={'blog_id': self.id})
+
+    # 添加访问量更新方法
+    def increase_visitting(self):
+        self.visiting += 1
+        self.save(update_fields=['visiting'])
 
     class Meta:
         ordering = ['-created_time']

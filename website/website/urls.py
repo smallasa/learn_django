@@ -17,10 +17,13 @@ from django.conf.urls import url
 from django.contrib import admin
 # 导入include模块
 from django.conf.urls import include
+# 导入静态图片路由
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     # 创建二级路由(转向APP自己路由地址)
     url(r'^blog/', include('blog.urls')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

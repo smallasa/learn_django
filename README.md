@@ -969,3 +969,367 @@ nav .navbar-form {
 </body>
 </html>
 ```
+
+
+### 8.博客首页设计
+1.打开"http://127.0.0.1:8000/admin"，出现异常
+![website_admin_error](static/images/06/website_admin_error.png)
+```bash
+解决方法：
+编辑"website/blog/urls.py"
+
+将：
+urlpatterns = {
+    url(r'^$', views.index, name='blog_index'),
+    url(r'^(?P<blog_id>[0-9]+)', views.detail, name='blog_detail'),
+}
+改为：
+urlpatterns = [
+    url(r'^$', views.index, name='blog_index'),
+    url(r'^(?P<blog_id>[0-9]+)', views.detail, name='blog_detail'),
+]
+```
+
+2.添加保存图片的路径
+```bash
+1.我们在"website/blog/models.py"中有定义
+# 博客模型
+class Entry(models.Model):
+    img = models.ImageField(upload_to='blog_images', null=True, blank=True, verbose_name='博客图片')
+
+2.我们编辑"website/website/setting.py"
+# 添加多媒体目录
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media').replace("\\", "/")
+MEDIA_URL = '/media/'
+```
+
+3.重启服务，我们添加博客  
+打开后台管理页面：
+![blog_add_1](static/images/06/blog_add_1.png)
+
+打开"博客"：
+![blog_add_2](static/images/06/blog_add_2.png)
+
+添加"博客"：
+![blog_add_3](static/images/06/blog_add_3.png)
+
+创建"新用户"：
+![blog_add_4](static/images/06/blog_add_4.png)
+![blog_add_5](static/images/06/blog_add_5.png)
+
+添加"博文"：
+![blog_add_6](static/images/06/blog_add_6.png)
+![blog_add_7](static/images/06/blog_add_7.png)
+
+查看"上传图片路径"：
+![blog_add_8](static/images/06/blog_add_8.png)
+
+添加"多条博文"：
+![blog_add_9](static/images/06/blog_add_9.png)
+
+查看"当然博客"：
+![blog_add_10](static/images/06/blog_add_10.png)
+
+```bash
+此时，我们需要将添加的博文从前端页面展示出来！
+```
+
+4.编辑"website/blog/views.py"
+```bash
+from django.shortcuts import render
+
+# 要展示所有博客，就需要先导入models
+from . import models
+
+# Create your views here.
+
+
+def index(request):
+    # 获取所有博客
+    entries = models.Entry.objects.all()
+
+    return render(request, 'blog/index.html', locals())
+
+
+# 由于路由中有传参，所以定义视图时，需要把参数也写上
+def detail(request, blog_id):
+    return render(request, 'blog/detail.html', locals())
+```
+
+5.编辑"website/blog/models.py"
+```bash
+from django.db import models
+from django.contrib.auth.models import User
+# 导入reverse模块
+from django.urls import reverse
+
+# 博客模型
+class Entry(models.Model):
+    title = models.CharField(max_length=128, verbose_name='博客标题')
+    author = models.ForeignKey(User, verbose_name='博客作者')
+    img = models.ImageField(upload_to='blog_images', null=True, blank=True, verbose_name='博客图片')
+    body = models.TextField(verbose_name='博客正文')
+    abstract = models.TextField(max_length=256, null=True, blank=True, verbose_name='博客摘要')
+    visiting = models.PositiveIntegerField(default=0, verbose_name='博客访问量')
+    category = models.ManyToManyField('Category', verbose_name='博客分类')
+    tags = models.ManyToManyField('Tag', verbose_name='博客标签')
+    created_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    modified_time = models.DateTimeField(auto_now=True, verbose_name='修改时间')
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        # blog:blog_detail ,blog是APP名字；blog_detail是urls中定义的路由名字
+        # 将self.id传参给blog_id,然后使用blog应用中的blog_detail路由规则
+        # 生成的url地址类如：http://127.0.0.1:8000/blog/3
+        return reverse('blog:blog_detail', kwargs={'blog_id': self.id})
+
+    class Meta:
+        ordering = ['-created_time']
+        verbose_name = '博客'
+        verbose_name_plural = '博客'
+
+```
+
+6.查看"website/blog/urls.py"
+```bash
+# 导入url模块
+from django.conf.urls import url
+# 导入view试图模块
+from . import views
+
+
+#定义APP名字
+app_name = 'blog'
+
+
+urlpatterns = [
+    url(r'^$', views.index, name='blog_index'),
+    url(r'^(?P<blog_id>[0-9]+)', views.detail, name='blog_detail'),
+]
+```
+
+7.编辑"website/blog/templates/blog/index.html"
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客首页{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                {% for entry in entries %}
+                    <h2><a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></h2>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+```
+
+8.重启服务，查看博客
+![blog_zhanshi_1](static/images/06/blog_zhanshi_1.png)
+
+9.点击"3"博文
+![blog_zhanshi_2](static/images/06/blog_zhanshi_2.png)
+```bash
+我们发现展示的内容如上图，说明detail.html还没有展示博文内容。
+```
+
+10.编辑"website/blog/templates/blog/detail.html"
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客详细页面{% endblock %}
+
+{% block content %}
+    博客{{ blog_id }}的详细页面
+{% endblock %}
+```
+
+11.刷新浏览器，点击"3"进行查看
+![blog_zhanshi_1](static/images/06/blog_zhanshi_1.png)
+![blog_zhanshi_3](static/images/06/blog_zhanshi_3.png)
+
+12.编辑"website/blog/templates/blog/index.html",展示摘要
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客首页{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                {% for entry in entries %}
+                    <h2><a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></h2>
+                    <!--判断摘要是否存在，存在展示；不存在展示body，截取其中的128位进行显示-->
+                    {% if entry.abstract %}
+                        <p>{{ entry.abstract }}</p>
+                    {% else %}
+                        <p>{{ entry.body | truncatechars:128 }}</p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+```
+
+13.刷新浏览器，进行展示
+![blog_zhanshi_4](static/images/06/blog_zhanshi_4.png)
+
+14.编辑"website/blog/templates/blog/index.html",展示作者，展示博文发布时间，浏览量
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客首页{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                {% for entry in entries %}
+                    <br />
+                    <h2><a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></h2>
+                    <!--判断摘要是否存在，存在展示；不存在展示body，截取其中的128位进行显示-->
+                    {% if entry.abstract %}
+                        <p>{{ entry.abstract }}</p>
+                    {% else %}
+                        <p>{{ entry.body | truncatechars:128 }}</p>
+                    {% endif %}
+                    <!--展示作者信息，博文发表时间，浏览量-->
+                    <p>
+                        <span>作者：{{ entry.author }}</span>
+                        <span>&nbsp;&nbsp;&nbsp;&nbsp;发表时间：{{ entry.created_time }}</span>
+                        <span>&nbsp;&nbsp;&nbsp;&nbsp;浏览量：{{ entry.visiting }}</span>
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+```
+
+15.刷新浏览器，进行查看
+![blog_zhanshi_5](static/images/06/blog_zhanshi_5.png)
+
+
+16.编辑"website/website/urls.py"，加载静态图片
+```bash
+from django.conf.urls import url
+from django.contrib import admin
+# 导入include模块
+from django.conf.urls import include
+# 导入静态图片路由
+from django.conf import settings
+from django.conf.urls.static import static
+
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    # 创建二级路由(转向APP自己路由地址)
+    url(r'^blog/', include('blog.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+17.编辑"website/blog/templates/blog/index.html",展示图片
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客首页{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                {% for entry in entries %}
+                    <br />
+                    <h2><a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></h2>
+                    <!--展示配图-->
+                    {% if entry.img %}
+                        <div><img src="{{ entry.img.url }}" alt="博客配图" width="100%" /></div>
+                    {% endif %}
+                    <!--判断摘要是否存在，存在展示；不存在展示body，截取其中的128位进行显示-->
+                    {% if entry.abstract %}
+                        <p>{{ entry.abstract }}</p>
+                    {% else %}
+                        <p>{{ entry.body | truncatechars:128 }}</p>
+                    {% endif %}
+                    <!--展示作者信息，博文发表时间，浏览量-->
+                    <p>
+                        <span>作者：{{ entry.author }}</span>
+                        <span>&nbsp;&nbsp;&nbsp;&nbsp;发表时间：{{ entry.created_time }}</span>
+                        <span>&nbsp;&nbsp;&nbsp;&nbsp;浏览量：{{ entry.visiting }}</span>
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+```
+
+18.刷新浏览器，进行展示
+![blog_zhanshi_6](static/images/06/blog_zhanshi_6.png)
+
+19.编辑"website/blog/models.py",设置浏览量的方法
+```bash
+# 博客模型
+class Entry(models.Model):
+    title = models.CharField(max_length=128, verbose_name='博客标题')
+    author = models.ForeignKey(User, verbose_name='博客作者')
+    img = models.ImageField(upload_to='blog_images', null=True, blank=True, verbose_name='博客图片')
+    body = models.TextField(verbose_name='博客正文')
+    abstract = models.TextField(max_length=256, null=True, blank=True, verbose_name='博客摘要')
+    visiting = models.PositiveIntegerField(default=0, verbose_name='博客访问量')
+    category = models.ManyToManyField('Category', verbose_name='博客分类')
+    tags = models.ManyToManyField('Tag', verbose_name='博客标签')
+    created_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    modified_time = models.DateTimeField(auto_now=True, verbose_name='修改时间')
+
+    def __str__(self):
+        return self.title
+
+    # 添加自动生成路由路径的方法
+    def get_absolute_url(self):
+        # blog:blog_detail ,blog是APP名字；blog_detail是urls中定义的路由名字
+        # 将self.id传参给blog_id,然后使用blog应用中的blog_detail路由规则
+        # 生成的url地址类如：http://127.0.0.1:8000/blog/3
+        return reverse('blog:blog_detail', kwargs={'blog_id': self.id})
+
+    # 添加访问量更新方法
+    def increase_visitting(self):
+        self.visiting += 1
+        self.save(update_fields=['visiting'])
+
+    class Meta:
+        ordering = ['-created_time']
+        verbose_name = '博客'
+        verbose_name_plural = '博客'
+```
+
+20.编辑"website/blog/templates/blog/views.py",引用展示浏览量方法
+```bash
+from django.shortcuts import render
+
+# 要展示所有博客，就需要先导入models
+from . import models
+
+# Create your views here.
+
+
+def index(request):
+    # 获取所有博客
+    entries = models.Entry.objects.all()
+
+    return render(request, 'blog/index.html', locals())
+
+
+# 由于路由中有传参，所以定义视图时，需要把参数也写上
+def detail(request, blog_id):
+    # 获取浏览量的方法
+    entry = models.Entry.objects.get(id=blog_id)
+    entry.increase_visitting()
+    return render(request, 'blog/detail.html', locals())
+```
+
+21.刷新浏览器，点击三次"3"博文后，进行观察浏览量
+![blog_zhanshi_7](static/images/06/blog_zhanshi_7.png)
+

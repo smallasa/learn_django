@@ -127,3 +127,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+# 添加多媒体目录
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media').replace("\\", "/")
+MEDIA_URL = '/media/'
