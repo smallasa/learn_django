@@ -16,6 +16,8 @@
     </div>
 </div>
 
+<hr />
+
 <div class="row">
     <div class="widget">
         <h3>推荐阅读：</h3>
@@ -27,5 +29,44 @@
                 <span class="badge">{{ entry.visiting }}</span>
             </div>
         {% endfor %}
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="widget">
+        <h3>分类：</h3>
+        {% get_categories as categories_list %}
+
+        <ul class="list-group">
+            {% for category in categories_list %}
+                <li class="list-group-item">
+                    <a href="{% url 'blog:blog_category' category.id %}">{{ category.name }}</a>
+                    <span class="badge">{% get_entry_count_of_category category.name %}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="widget">
+        <h3>归档：</h3>
+        {% archives as date_list %}
+
+        <ul class="list-group">
+            {% for date in date_list %}
+                <li class="list-group-item">
+                    <a href="{% url 'blog:blog_archives' date.year date.month %}">
+                        <i class="glyphicon glyphicon-chevron-right"></i>
+                        {{ date.year }} 年 {{ date.month }} 月
+                        <span class="badge">{% get_entry_count_of_date date.year date.month %}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
 </div>

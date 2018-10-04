@@ -1762,7 +1762,7 @@ def detail(request, blog_id):
 ![blog_fenye_3](static/images/09/blog_fenye_3.png)
 
 
-### 10.分类和标签
+### 12.分类和标签
 1.编辑"website/blog/views.py",定义分类视图
 ```bash
 # 定义分类视图
@@ -1837,7 +1837,7 @@ urlpatterns = [
 ![blog_biaoqian_2](static/images/10/blog_biaoqian_2.png)
 
 
-### 11.关键字搜索
+### 13.关键字搜索
 1.编辑"website/blog/urls.py"，设置路由规则
 ```bash
     ... ...
@@ -1887,13 +1887,13 @@ def search(request):
 ![blog_sousuo_2](static/images/11/blog_sousuo_2.png)
 
 
-### 12.博客侧边栏
+### 14.博客侧边栏
 1.创建"website/templatetags"包
 ```bash
 注意，此包的包名只能是templatetags
 ```
 
-2.创建并编辑"website/templatetags/blog_tags.py"，自定义标签
+2.创建并编辑"website/templatetags/blog_tags.py"，自定义博客标签
 ```bash
 from django import template
 from ..models import Entry, Category, Tag
@@ -1946,7 +1946,7 @@ def get_recent_entries(num=5):
 {% endblock %}
 ```
 
-5.编辑"website/website/setting.py"，引入自定义的注册器
+5.编辑"website/website/setting.py"，引入自定义的标签
 ```bash
 TEMPLATES = [
     {
@@ -1972,14 +1972,14 @@ TEMPLATES = [
 6.刷新浏览器进行查看
 ![blog_cebianlan_1](static/images/12/blog_cebianlan_1.png)
 
-7.编辑"website/templatetags/blog_tags.py"，定义推荐注册器
+7.编辑"website/templatetags/blog_tags.py"，定义推荐标签
 ```bash
 @register.simple_tag
 def get_popular_entries(num=5):
     return Entry.objects.all().order_by('-visiting')[:num]
 ```
 
-8.编辑"website/blog/templates/blog/right_side_bar.html",定义侧边推荐html
+8.编辑"website/blog/templates/blog/right_side_bar.html",定义侧边推荐
 ```bash
 <div class="row">
     <div class="widget">
@@ -1998,4 +1998,157 @@ def get_popular_entries(num=5):
 
 9.刷新浏览器进行查看
 ![blog_cebianlan_2](static/images/12/blog_cebianlan_2.png)
+
+
+### 15.博客归档
+1.编辑"website/templatetags/blog_tags.py"，定义分类标签
+```bash
+@register.simple_tag
+def get_categories():
+    return Category.objects.all()
+```
+
+2.编辑"website/blog/templates/blog/right_side_bar.html",定义侧边分类
+```bash
+<div class="row">
+    <div class="widget">
+        <h3>分类：</h3>
+        {% get_categories as categories_list %}
+
+        <ul class="list-group">
+            {% for category in categories_list %}
+                <li class="list-group-item">
+                    <a href="{% url 'blog:blog_category' category.id %}">{{ category.name }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+```
+
+3.刷新浏览器进行查看
+![blog_cebianlan_1](static/images/13/blog_cebianlan_1.png)
+
+4.编辑"website/templatetags/blog_tags.py"，定义分类数量
+```bash
+@register.simple_tag
+def get_entry_count_of_category(category_name):
+    return Entry.objects.filter(category__name=category_name).count()
+```
+
+5.编辑"website/blog/templates/blog/right_side_bar.html",定义侧边分类数量
+```bash
+<div class="row">
+    <div class="widget">
+        <h3>分类：</h3>
+        {% get_categories as categories_list %}
+
+        <ul class="list-group">
+            {% for category in categories_list %}
+                <li class="list-group-item">
+                    <a href="{% url 'blog:blog_category' category.id %}">{{ category.name }}</a>
+                    <span class="badge">{% get_entry_count_of_category category.name %}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+```
+
+6.刷新浏览器进行查看
+![blog_cebianlan_2](static/images/13/blog_cebianlan_2.png)
+
+7.编辑"website/templatetags/blog_tags.py"，定义归档
+```bash
+@register.simple_tag
+def archives():
+    return Entry.objects.dates('created_time','month', order='DESC')
+```
+
+8.编辑"website/blog/templates/blog/right_side_bar.html",定义归档
+```bash
+<div class="row">
+    <div class="widget">
+        <h3>归档：</h3>
+        {% archives as date_list %}
+
+        <ul class="list-group">
+            {% for date in date_list %}
+                <li class="list-group-item">
+                    <a href="{% url 'blog:blog_archives' date.year date.month %}">
+                        <i class="glyphicon glyphicon-chevron-right"></i>
+                        {{ date.year }} 年 {{ date.month }} 月
+                        <span class="badge">1</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+```
+
+9.编辑"website/blog/urls.py"，设置路由规则
+```bash
+    url(r'^archives/(?P<year>[0-9]+)/(?P<month>[0-9]+)/$', views.archives, name='blog_archives'),
+]
+```
+
+10.编辑"website/blog/views.py",定义归档视图
+```bash
+# 定义归档视图
+def archives(request):
+    pass
+```
+
+11.刷新浏览器进程查看
+![blog_cebianlan_3](static/images/13/blog_cebianlan_3.png)
+
+12.编辑"website/templatetags/blog_tags.py"，定义归档时间数量
+```bash
+@register.simple_tag
+def get_entry_count_of_date(year, month):
+    return Entry.objects.filter(created_time__year=year, created_time__month=month).count()
+```
+
+13.编辑"website/blog/templates/blog/right_side_bar.html",定义归档数量
+```bash
+<div class="row">
+    <div class="widget">
+        <h3>归档：</h3>
+        {% archives as date_list %}
+
+        <ul class="list-group">
+            {% for date in date_list %}
+                <li class="list-group-item">
+                    <a href="{% url 'blog:blog_archives' date.year date.month %}">
+                        <i class="glyphicon glyphicon-chevron-right"></i>
+                        {{ date.year }} 年 {{ date.month }} 月
+                        <span class="badge">{% get_entry_count_of_date date.year date.month %}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+```
+
+14.刷新浏览器进行查看
+![blog_cebianlan_4](static/images/13/blog_cebianlan_4.png)
+
+15.编辑"website/blog/views.py",可以查看归档内容
+```bash
+# 定义归档视图
+def archives(request, year, month):
+    entries = models.Entry.objects.filter(created_time__year=year, created_time__month=month)
+
+    page = request.GET.get('page', 1)
+    entry_list, paginator = make_paginator(entries, page)
+    page_data = pagination_data(paginator, page)
+
+    return render(request, 'blog/index.html', locals())
+```
+
+16.刷新浏览器进行查看  
+点击归档链接后查看
+![blog_cebianlan_5](static/images/13/blog_cebianlan_5.png)
 

@@ -188,3 +188,14 @@ def search(request):
     page_data = pagination_data(paginator, page)
 
     return render(request, 'blog/index.html', locals())
+
+
+# 定义归档视图
+def archives(request, year, month):
+    entries = models.Entry.objects.filter(created_time__year=year, created_time__month=month)
+
+    page = request.GET.get('page', 1)
+    entry_list, paginator = make_paginator(entries, page)
+    page_data = pagination_data(paginator, page)
+
+    return render(request, 'blog/index.html', locals())
