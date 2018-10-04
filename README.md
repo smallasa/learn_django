@@ -1886,3 +1886,116 @@ def search(request):
 搜索关键字：
 ![blog_sousuo_2](static/images/11/blog_sousuo_2.png)
 
+
+### 12.博客侧边栏
+1.创建"website/templatetags"包
+```bash
+注意，此包的包名只能是templatetags
+```
+
+2.创建并编辑"website/templatetags/blog_tags.py"，自定义标签
+```bash
+from django import template
+from ..models import Entry, Category, Tag
+
+# 生成注册器
+register = template.Library()
+
+
+@register.simple_tag
+def get_recent_entries(num=5):
+    return Entry.objects.all().order_by('-created_time')[:num]
+```
+
+3.创建并编辑"website/blog/templates/blog/right_side_bar.html",定义侧边html
+```bash
+{% load blog_tags %}
+
+<div class="row">
+    <div class="widget">
+        <h3>最新博客：</h3>
+        {% get_recent_entries as recent_entry_list %}
+
+        {% for entry in recent_entry_list %}
+            <div>
+                <a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
+                <div>
+                    {{ entry.author }}  发表于： {{ entry.created_time|date:"Y年m月d日" }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+```
+
+4.编辑"website/blog/templates/blog/index.html",将侧边栏html包含到主页中
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}博客首页{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9"...>
+
+            <div class="col-md-3">
+                {% include 'blog/right_side_bar.html' %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+```
+
+5.编辑"website/website/setting.py"，引入自定义的注册器
+```bash
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')]
+        ,
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+            'libraries': {
+                'blog_tags': 'blog.templatetags.blog_tags',
+            },
+        },
+    },
+]
+```
+
+6.刷新浏览器进行查看
+![blog_cebianlan_1](static/images/12/blog_cebianlan_1.png)
+
+7.编辑"website/templatetags/blog_tags.py"，定义推荐注册器
+```bash
+@register.simple_tag
+def get_popular_entries(num=5):
+    return Entry.objects.all().order_by('-visiting')[:num]
+```
+
+8.编辑"website/blog/templates/blog/right_side_bar.html",定义侧边推荐html
+```bash
+<div class="row">
+    <div class="widget">
+        <h3>推荐阅读：</h3>
+        {% get_popular_entries as popular_entry_list %}
+
+        {% for entry in popular_entry_list %}
+            <div>
+                <a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a>
+                <span class="badge">{{ entry.visiting }}</span>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+```
+
+9.刷新浏览器进行查看
+![blog_cebianlan_2](static/images/12/blog_cebianlan_2.png)
+
