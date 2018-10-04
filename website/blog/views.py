@@ -5,11 +5,16 @@ from . import models
 
 #导入markdown
 import markdown
+
 #导入语法高亮度
 import pygments
 
 #Django内置分页功能
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+# 导入Django导入搜索函数
+from django.db.models import Q
+
 
 # Create your views here.
 
@@ -135,6 +140,7 @@ def detail(request, blog_id):
     entry.increase_visitting()
     return render(request, 'blog/detail.html', locals())
 
+
 # 定义分类视图
 def category(request, category_id):
     c = models.Category.objects.get(id=category_id)
@@ -147,6 +153,7 @@ def category(request, category_id):
 
     return render(request, 'blog/index.html', locals())
 
+
 # 定义标签分类视图
 def tag(request, tag_id):
     t = models.Tag.objects.get(id=tag_id)
@@ -155,6 +162,26 @@ def tag(request, tag_id):
         entries = models.Entry.objects.all()
     else:
         entries = models.Entry.objects.filter(tags=t)
+
+    page = request.GET.get('page', 1)
+    entry_list, paginator = make_paginator(entries, page)
+    page_data = pagination_data(paginator, page)
+
+    return render(request, 'blog/index.html', locals())
+
+
+# 定义搜索框视图
+def search(request):
+    keyword = request.GET.get('keyword', None)
+    if not keyword:
+        error_msg = "请输入关键字"
+        return render(request, 'blog/index.html', locals())
+
+    entries = models.Entry.objects.filter(
+        Q(title__icontains=keyword)|
+        Q(body__icontains=keyword)|
+        Q(abstract__icontains=keyword)
+    )
 
     page = request.GET.get('page', 1)
     entry_list, paginator = make_paginator(entries, page)

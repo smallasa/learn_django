@@ -1836,3 +1836,53 @@ urlpatterns = [
 ![blog_biaoqian_1](static/images/10/blog_biaoqian_1.png)
 ![blog_biaoqian_2](static/images/10/blog_biaoqian_2.png)
 
+
+### 11.关键字搜索
+1.编辑"website/blog/urls.py"，设置路由规则
+```bash
+    ... ...
+    url(r'^search/$', views.search, name='blog_search'),
+]
+```
+
+2.编辑"website/blog/templates/blog/base.html"，设定搜索框
+```bash
+<form class="navbar-form navbar-left" action="{% url 'blog:blog_search' %}" method="get">
+     <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name="keyword">
+     </div>
+     <button type="submit" class="btn btn-default">搜索</button>
+</form>
+```
+
+3.编辑"website/blog/views.py"，设置搜索视图
+```bash
+# 导入Django导入搜索函数
+from django.db.models import Q
+
+# 定义搜索框视图
+def search(request):
+    keyword = request.GET.get('keyword', None)
+    if not keyword:
+        error_msg = "请输入关键字"
+        return render(request, 'blog/index.html', locals())
+
+    entries = models.Entry.objects.filter(
+        Q(title__icontains=keyword)|
+        Q(body__icontains=keyword)|
+        Q(abstract__icontains=keyword)
+    )
+
+    page = request.GET.get('page', 1)
+    entry_list, paginator = make_paginator(entries, page)
+    page_data = pagination_data(paginator, page)
+
+    return render(request, 'blog/index.html', locals())
+```
+
+4.刷新浏览器进行查看
+搜索空关键字：
+![blog_sousuo_1](static/images/11/blog_sousuo_1.png)
+搜索关键字：
+![blog_sousuo_2](static/images/11/blog_sousuo_2.png)
+
