@@ -134,3 +134,30 @@ def detail(request, blog_id):
     entry.toc = md.toc
     entry.increase_visitting()
     return render(request, 'blog/detail.html', locals())
+
+# 定义分类视图
+def category(request, category_id):
+    c = models.Category.objects.get(id=category_id)
+
+    entries = models.Entry.objects.filter(category=c)
+
+    page = request.GET.get('page', 1)
+    entry_list, paginator = make_paginator(entries, page)
+    page_data = pagination_data(paginator, page)
+
+    return render(request, 'blog/index.html', locals())
+
+# 定义标签分类视图
+def tag(request, tag_id):
+    t = models.Tag.objects.get(id=tag_id)
+
+    if t.name == "全部":
+        entries = models.Entry.objects.all()
+    else:
+        entries = models.Entry.objects.filter(tags=t)
+
+    page = request.GET.get('page', 1)
+    entry_list, paginator = make_paginator(entries, page)
+    page_data = pagination_data(paginator, page)
+
+    return render(request, 'blog/index.html', locals())

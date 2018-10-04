@@ -1760,3 +1760,79 @@ def detail(request, blog_id):
 ![blog_fenye_1](static/images/09/blog_fenye_1.png)
 ![blog_fenye_2](static/images/09/blog_fenye_2.png)
 ![blog_fenye_3](static/images/09/blog_fenye_3.png)
+
+
+### 10.分类和标签
+1.编辑"website/blog/views.py",定义分类视图
+```bash
+# 定义分类视图
+def category(request, category_id):
+    c = models.Category.objects.get(id=category_id)
+    
+    entries = models.Entry.objects.filter(category=c)
+    
+    page = request.GET.get('page', 1)
+    entry_list, paginator = make_paginator(entries, page)
+    page_data = pagination_data(paginator, page)
+
+    return render(request, 'blog/index.html', locals())
+```
+
+2.编辑"website/blog/urls.py",定义分类路由
+```bash
+urlpatterns = [
+    ... ...
+    url(r'^category/(?P<category_id>[0-9]+)/$', views.category, name='blog_category'),
+]
+```
+
+3.编辑"website/blog/templates/blog/detail.html"，引用分类路由
+```bash
+&nbsp;&nbsp;&nbsp;&nbsp;分类：
+{% for category in entry.category.all %}
+    &nbsp;&nbsp;<a href="{% url 'blog:blog_category' category.id %}">{{ category.name }}</a>
+{% endfor %}
+```
+
+4.刷新浏览器进行查看
+![blog_fenlei_1](static/images/10/blog_fenlei_1.png)
+![blog_fenlei_2](static/images/10/blog_fenlei_2.png)
+
+5.编辑"website/blog/views.py",定义标签视图
+```bash
+# 定义标签分类视图
+def tag(request, tag_id):
+    t = models.Tag.objects.get(id=tag_id)
+
+    if t.name == "全部":
+        entries = models.Entry.objects.all()
+    else:
+        entries = models.Entry.objects.filter(tags=t)
+
+    page = request.GET.get('page', 1)
+    entry_list, paginator = make_paginator(entries, page)
+    page_data = pagination_data(paginator, page)
+
+    return render(request, 'blog/index.html', locals())
+```
+
+6.编辑"website/blog/urls.py",定义标签路由
+```bash
+urlpatterns = [
+    ... ...
+    url(r'^tag/(?P<tag_id>[0-9]+)/$', views.tag, name='blog_tag'),
+]
+```
+
+7.编辑"website/blog/templates/blog/detail.html"，引用分类路由
+```bash
+&nbsp;&nbsp;&nbsp;&nbsp;标签：
+{% for tag in entry.tags.all %}
+    &nbsp;&nbsp;<a href="{% url 'blog:blog_tag' tag.id %}">{{ tag.name }}</a>
+{% endfor %}
+```
+
+8.刷新浏览器进行查看
+![blog_biaoqian_1](static/images/10/blog_biaoqian_1.png)
+![blog_biaoqian_2](static/images/10/blog_biaoqian_2.png)
+
