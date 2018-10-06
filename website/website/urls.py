@@ -22,6 +22,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 # 导入RSS模块
 from blog.feed import LastestEntriesFeed
+# 导入错误页码
+from blog import views as blog_views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -30,3 +32,7 @@ urlpatterns = [
     # 定义RSS路由
     url(r'latest/feed/$', LastestEntriesFeed()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler403 = blog_views.permission_denied
+handler404 = blog_views.page_not_found
+handler500 = blog_views.page_error

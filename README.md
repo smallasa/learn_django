@@ -2231,3 +2231,94 @@ urlpatterns = [
 8.刷新浏览器进行查看
 ![blog_cebianlan_3](static/images/14/blog_cebianlan_3.png)
 
+
+### 17.自定义403,404,500页码
+1.编辑"website/website/urls.py"配置文件，定义403，404，500页面
+```bash
+# 导入错误页码
+from blog import views as blog_views
+
+handler403 = blog_views.permission_denied
+handler404 = blog_views.page_not_found
+handler500 = blog_views.page_error
+```
+
+2.编辑"website/blog/templates/blog/403.html"
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}403{% endblock %}
+
+{% block content %}
+    <section class="container text-center" style="min-height: 600px;">
+        <h1>403, Forbidden!</h1>
+        <p>你没有权限访问该页面</p>
+        <a class="btn btn-primary" href="{% url 'blog:blog_index' %}">返回主页</a>
+    </section>
+{% endblock %}
+```
+
+3.编辑"website/blog/templates/blog/404.html"
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}404{% endblock %}
+
+{% block content %}
+    <section class="container text-center" style="min-height: 600px;">
+        <h1>404, Page not found!</h1>
+        <p>该页面不存在</p>
+        <a class="btn btn-primary" href="{% url 'blog:blog_index' %}">返回主页</a>
+    </section>
+{% endblock %}
+```
+
+4.编辑"website/blog/templates/blog/500.html"
+```bash
+{% extends 'blog/base.html' %}
+{% block title %}500{% endblock %}
+
+{% block content %}
+    <section class="container text-center" style="min-height: 600px;">
+        <h1>500, Page Error!</h1>
+        <p>你没有权限访问该页面</p>
+        <a class="btn btn-primary" href="{% url 'blog:blog_index' %}">返回主页</a>
+    </section>
+{% endblock %}
+```
+
+5.编辑"website/blog/views.py",设置错误页面
+```bash
+from django.shortcuts import get_object_or_404
+
+# 由于路由中有传参，所以定义视图时，需要把参数也写上
+def detail(request, blog_id):
+    # 获取浏览量的方法
+    # entry = models.Entry.objects.get(id=blog_id)
+    entry = get_object_or_404(models.Entry, id=blog_id)
+    # 定义markdown
+    md = markdown.Markdown(extensions=[
+        'markdown.extensions.extra',
+        'markdown.extensions.codehilite',
+        'markdown.extensions.toc',
+    ])
+    # 将body内容转换为html
+    entry.body = md.convert(entry.body)
+    entry.toc = md.toc
+    entry.increase_visitting()
+    return render(request, 'blog/detail.html', locals())
+```
+
+6.编辑"website/website/setting.py"
+```bash
+DEBUG = False
+
+ALLOWED_HOSTS = ['*']
+
+
+注意：
+1.必须将DEBUG设置为False后，403，404，500错误才能正常显示。
+2.设置完DEBUG=False后，必须设置ALLOWED_HOST
+```
+
+7.刷新浏览器进行查看
+![blog_error_1](static/images/15/blog_error_1.png)
+

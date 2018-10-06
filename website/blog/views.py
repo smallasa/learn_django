@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 
 # 要展示所有博客，就需要先导入models
 from . import models
@@ -127,7 +128,8 @@ def index(request):
 # 由于路由中有传参，所以定义视图时，需要把参数也写上
 def detail(request, blog_id):
     # 获取浏览量的方法
-    entry = models.Entry.objects.get(id=blog_id)
+    # entry = models.Entry.objects.get(id=blog_id)
+    entry = get_object_or_404(models.Entry, id=blog_id)
     # 定义markdown
     md = markdown.Markdown(extensions=[
         'markdown.extensions.extra',
@@ -199,3 +201,18 @@ def archives(request, year, month):
     page_data = pagination_data(paginator, page)
 
     return render(request, 'blog/index.html', locals())
+
+
+# 定义403视图
+def permission_denied(request):
+    return render(request, 'blog/403.html', locals())
+
+
+# 定义404视图
+def page_not_found(request):
+    return render(request, 'blog/404.html', locals())
+
+
+# 定义403视图
+def page_error(request):
+    return render(request, 'blog/500.html', locals())
