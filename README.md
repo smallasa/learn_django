@@ -2152,3 +2152,82 @@ def archives(request, year, month):
 点击归档链接后查看
 ![blog_cebianlan_5](static/images/13/blog_cebianlan_5.png)
 
+
+### 16.标签云及RSS订阅
+1.编辑"website/templatetags/blog_tags.py"，定义获取所有标签
+```bash
+@register.simple_tag
+def get_tags():
+    return Tag.objects.all()
+```
+
+2.编辑"website/blog/templates/blog/right_side_bar.html",定义标签云
+```bash
+<div class="row">
+    <div class="widget">
+        <h3>标签云：</h3>
+        {% get_tags as tag_list %}
+
+        <ul class="list-group">
+            {% for tag in tag_list %}
+                <a href="{% url 'blog:blog_tag' tag.id %}">
+                    <span class="label {% cycle 'label-default' 'label-primary' 'label-info' 'label-warning' 'label-danger' %}">{{ tag.name }}</span>
+                </a>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+```
+
+3.刷新浏览器进行查看
+![blog_cebianlan_1](static/images/14/blog_cebianlan_1.png)
+
+4.创建并编辑"website/blog/feed.py",定义RSS订阅
+```bash
+from django.contrib.syndication.views import Feed
+from .models import Entry
+
+class LastestEntriesFeed(Feed):
+    title = "我的博客网站"
+    link = "/siteblogs/"
+    description = "最新更新的博客文章"
+
+    def items(self):
+        return Entry.objects.order_by('-created_time')[:5]
+
+    def item_title(self, item):
+        return item.title
+
+    def item_description(self, item):
+        return item.abstract
+```
+
+5.编辑"website/website/urls.py",定义路由，导入rss
+```bash
+# 导入RSS模块
+from blog.feed import LastestEntriesFeed
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    # 创建二级路由(转向APP自己路由地址)
+    url(r'^blog/', include('blog.urls')),
+    # 定义RSS路由
+    url(r'latest/feed/$', LastestEntriesFeed()),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+6.刷新浏览器，输入"http://127.0.0.1:8000/lattest/feed/"进行查看
+![blog_cebianlan_2](static/images/14/blog_cebianlan_2.png)
+
+7.编辑"website/blog/templates/blog/right_side_bar.html",将订阅添加到侧边栏
+```bash
+<div class="row">
+    <div class="rss">
+        <a href="/latest/feed/"><i class="glyphicon glyphicon-globe"></i>RSS订阅</a>
+    </div>
+</div>
+```
+
+8.刷新浏览器进行查看
+![blog_cebianlan_3](static/images/14/blog_cebianlan_3.png)
+

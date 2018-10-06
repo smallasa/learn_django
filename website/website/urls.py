@@ -20,10 +20,13 @@ from django.conf.urls import include
 # 导入静态图片路由
 from django.conf import settings
 from django.conf.urls.static import static
-
+# 导入RSS模块
+from blog.feed import LastestEntriesFeed
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     # 创建二级路由(转向APP自己路由地址)
     url(r'^blog/', include('blog.urls')),
+    # 定义RSS路由
+    url(r'latest/feed/$', LastestEntriesFeed()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

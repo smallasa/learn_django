@@ -70,3 +70,28 @@
         </ul>
     </div>
 </div>
+
+<hr />
+
+<div class="row">
+    <div class="widget">
+        <h3>标签云：</h3>
+        {% get_tags as tag_list %}
+
+        <ul class="list-group">
+            {% for tag in tag_list %}
+                <a href="{% url 'blog:blog_tag' tag.id %}">
+                    <span class="label {% cycle 'label-default' 'label-primary' 'label-info' 'label-warning' 'label-danger' %}">{{ tag.name }}</span>
+                </a>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="rss">
+        <a href="/latest/feed/"><i class="glyphicon glyphicon-globe"></i>RSS订阅</a>
+    </div>
+</div>
